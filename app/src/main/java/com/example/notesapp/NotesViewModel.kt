@@ -1,23 +1,33 @@
-package com.example.notesapp
+package com.example.notesapp.viewmodel
 
 import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import androidx.lifecycle.viewModelScope
+import com.example.notesapp.data.NoteEntity
+import com.example.notesapp.data.NoteRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 
-class NotesViewModel : ViewModel() {
+class NotesViewModel(private val repository: NoteRepository) : ViewModel() {
 
-    // Holds list of notes
-    private val _notes = MutableStateFlow<List<Note>>(emptyList())
+    // Get notes from database
+    val notes: Flow<List<NoteEntity>> = repository.allNotes
 
-    // Exposed to UI
-    val notes: StateFlow<List<Note>> = _notes
+    // Add new note
+    fun addNote(title: String, content: String) {
+        viewModelScope.launch {
+            repository.insert(
+                NoteEntity(
+                    title = title,
+                    content = content
+                )
+            )
+        }
+    }
 
-    // Function to add a new note
-    fun addNote(title: String, body: String) {
-        val newNote = Note(
-            title = title,
-            body = body
-        )
-        _notes.value = listOf(newNote) + _notes.value
+    // Delete note
+    fun deleteNote(note: NoteEntity) {
+        viewModelScope.launch {
+            repository.delete(note)
+        }
     }
 }
